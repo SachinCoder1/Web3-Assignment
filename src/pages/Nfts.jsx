@@ -17,6 +17,7 @@ export default function Nfts() {
   const navigate = useNavigate();
   const { currentAccountAddress, getAddresses } = useContext(MainContext);
   const [selectedAddress, setSelectedAddress] = useState(currentAccountAddress);
+  const [allAddresses, setAllAddresses] = useState([])
   const [nftData, setNftData] = useState([]);
   useEffect(() => {
     if (!currentAccountAddress) {
@@ -33,6 +34,16 @@ export default function Nfts() {
     fetchNft();
   }, [selectedAddress]);
 
+  useEffect(() => {
+    const fetchAddresses = async () => {
+      const data = await getAddresses();
+      setAllAddresses(data);
+    };
+
+    fetchAddresses();
+  }, [currentAccountAddress]);
+  
+
   return (
     <MainLayout>
       <Select
@@ -40,8 +51,8 @@ export default function Nfts() {
         onChange={(e) => setSelectedAddress(e)}
         label="Choose Address"
       >
-        {getAddresses() && getAddresses().length > 0 ? (
-          getAddresses()?.map((item, index) => (
+        {allAddresses.length > 0 ? (
+          allAddresses?.map((item, index) => (
             <Option key={index} value={item}>
               {item}
             </Option>

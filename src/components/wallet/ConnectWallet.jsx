@@ -6,7 +6,7 @@ import { networks } from "../../configs/walletConfigs";
 import { MainContext } from "../../context/MainContext";
 
 export default function ConnectWallet() {
-  const { currentAccountAddress, setCurrentAccountAddress } =
+  const { currentAccountAddress, setCurrentAccountAddress, getAddresses } =
     useContext(MainContext);
 
   useEffect(() => {

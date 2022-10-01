@@ -1,19 +1,25 @@
 import React, { useContext, useState, useEffect } from "react";
 import ConnectWallet from "../components/wallet/ConnectWallet";
 import { MainContext } from "../context/MainContext";
-import { Button, Input, Typography } from "@material-tailwind/react";
+import { Button, Input } from "@material-tailwind/react";
 import { AiOutlineArrowRight } from "react-icons/ai";
 import MainLayout from "../components/layouts/MainLayout";
 
 export default function Wallet() {
-  const { currentAccountAddress, addAddress, getAddresses, removeAddress } =
+  const { currentAccountAddress, addToAddresses, getAddresses, removeAddress } =
     useContext(MainContext);
   const [addressInput, setAddressInput] = useState("");
   const [isAdded, setIsAdded] = useState(2);
+  const [addresses, setAddresses] = useState([]);
 
   useEffect(() => {
-    getAddresses();
-  }, [isAdded]);
+    const fetchAddresses = async () => {
+      const data = await getAddresses();
+      setAddresses(data);
+    };
+
+    fetchAddresses();
+  }, [isAdded, currentAccountAddress]);
 
   return (
     <MainLayout>
@@ -35,7 +41,7 @@ export default function Wallet() {
               />
               <Button
                 onClick={() => {
-                  addAddress(addressInput);
+                  addToAddresses(addressInput);
                   setAddressInput("");
                   setIsAdded(isAdded + 1);
                 }}
@@ -50,26 +56,24 @@ export default function Wallet() {
 
             {/* All Address Lists */}
             <div className="flex flex-col justify-center gap-y-6">
-              {getAddresses() &&
-                getAddresses().length > 0 &&
-                getAddresses().map((item, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center gap-x-2 gap-y-4 text-xl"
+              {addresses?.map((item, index) => (
+                <div
+                  key={index}
+                  className="flex items-center gap-x-2 gap-y-4 text-xl"
+                >
+                  {item}
+                  <Button
+                    onClick={() => {
+                      removeAddress(item);
+                      setIsAdded(isAdded - 1);
+                    }}
+                    className="bg-red-500"
+                    size="sm"
                   >
-                    {item}
-                    <Button
-                      onClick={() => {
-                        removeAddress(index);
-                        setIsAdded(isAdded - 1);
-                      }}
-                      className="bg-red-500"
-                      size="sm"
-                    >
-                      Remove Address
-                    </Button>
-                  </div>
-                ))}
+                    Remove Address
+                  </Button>
+                </div>
+              ))}
             </div>
           </>
         ) : (

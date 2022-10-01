@@ -1,5 +1,11 @@
 import { createContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  getAddress,
+  loginUser,
+  addToAddress,
+  removeFromAddress,
+} from "../api/addressApi";
 import { urls } from "../constants";
 
 export const MainContext = createContext("");
@@ -8,37 +14,44 @@ export const MainProvider = ({ children }) => {
   let navigate = useNavigate();
   const [currentAccountAddress, setCurrentAccountAddress] = useState("");
 
-  const addAddress = address => {
-    if (localStorage.getItem("addresses")) {
-      const allAddresses = JSON.parse(localStorage.getItem("addresses"));
-      if (!allAddresses[currentAccountAddress]) {
-        allAddresses[currentAccountAddress] = [];
-      } else {
-        allAddresses[currentAccountAddress].push(address);
-      }
-      localStorage.setItem("addresses", JSON.stringify(allAddresses));
-    } else {
-      const addresses = {};
-      addresses[currentAccountAddress] = [];
-      addresses[currentAccountAddress].push(address)
-      localStorage.setItem("addresses", JSON.stringify(addresses));
+  const addAddress = async () => {
+    if (!currentAccountAddress) return;
+    const data = await loginUser(currentAccountAddress);
+    if (data.token.length > 10) {
+      localStorage.setItem("accessToken", data.token);
     }
+
+    return true;
+  };
+  const addToAddresses = async (otherAddress) => {
+    if (!currentAccountAddress) return;
+    const data = await addToAddress(currentAccountAddress, otherAddress);
+    if (data.address === otherAddress) {
+      return true;
+    }
+    return false;
   };
 
-  const getAddresses = () => {
-    if (!currentAccountAddress || currentAccountAddress.length < 2 || !localStorage.getItem("addresses")) return;
+  const getAddresses = async () => {
+    if (!currentAccountAddress) return;
 
-    const addresses = JSON.parse(localStorage.getItem("addresses"));
-    return addresses[currentAccountAddress];
+    const data = await getAddress(currentAccountAddress);
+    return data?.otherAddresses;
   };
 
-  const removeAddress = index => {
-     if(!currentAccountAddress) return;
-     const allAddresses = JSON.parse(localStorage.getItem('addresses'));  
-     allAddresses[currentAccountAddress].splice(index, 1)
-     localStorage.setItem("addresses", JSON.stringify(allAddresses));
-     
-  }
+  const removeAddress = async (addressToRemove) => {
+    if (!currentAccountAddress) return;
+    const data = await removeFromAddress(
+      currentAccountAddress,
+      addressToRemove
+    );
+    console.log("remove data", data);
+    if (data.address === addressToRemove) {
+      return true;
+    }
+
+    return false;
+  };
 
   useEffect(() => {
     if (!currentAccountAddress) {
@@ -46,12 +59,20 @@ export const MainProvider = ({ children }) => {
     }
   }, []);
 
+  useEffect(() => {
+    addAddress();
+    // addToAddresses("0282083938938383")
+    // getAddresses()
+    // removeAddress("0282083938938384")
+  }, [currentAccountAddress]);
+
   return (
     <MainContext.Provider
       value={{
         currentAccountAddress,
         setCurrentAccountAddress,
         addAddress,
+        addToAddresses,
         getAddresses,
         removeAddress,
       }}
